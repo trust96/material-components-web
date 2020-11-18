@@ -3,6 +3,39 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [9.0.0](https://github.com/material-components/material-components-web/compare/v8.0.0...v9.0.0) (2020-11-18)
+
+
+### Bug Fixes
+
+* **list:** add support for density scaling. ([419e035](https://github.com/material-components/material-components-web/commit/419e035729c1ca1ee2b572ae4b1937e2d8cf04bc))
+* **list:** add support for non-interactive list roles. ([fc8b045](https://github.com/material-components/material-components-web/commit/fc8b045f1127709c5929a3cd1c9c7d622db8ed42))
+* Adding tests. ([240c5f7](https://github.com/material-components/material-components-web/commit/240c5f74f381967ede9eb1fa13754d2f0282da9e))
+* adjust meta baseline and update color mixins. ([07f3e01](https://github.com/material-components/material-components-web/commit/07f3e01b75306a7481c7077cd3ed12a87399958e))
+* **notched-outline:** fix notched outline no-label style ([99cfb6b](https://github.com/material-components/material-components-web/commit/99cfb6bd53f72240fe76852d0fdaa0b82e7dca39))
+* **select:** debounce click on anchor ([b39094d](https://github.com/material-components/material-components-web/commit/b39094d145f9b96c1c75e2b5fcce7b76c9b31bf1))
+
+
+### Features
+
+* **banner:** Add mobile-stacked variant support to banner. ([a0b2db2](https://github.com/material-components/material-components-web/commit/a0b2db26b550162d2e409489c5ded3381b7c7dc2))
+* **circular-progress:** do not require HTML without whitespaces ([8648b82](https://github.com/material-components/material-components-web/commit/8648b8258f7f87edcc1d58a2bc7db3d78425508f))
+* **list:** support ctrl + a keyboard shortcut ([eefef49](https://github.com/material-components/material-components-web/commit/eefef49d86c69b1985aa4e5fa5b8809ba1f0a1f4)), closes [#6366](https://github.com/material-components/material-components-web/issues/6366)
+* **slider:** Add hidden input to slider, to support forms submission. This is also prep for moving to use an \<input type="range"\> behind the scenes, in order to support touch-based AT's. ([b98d15d](https://github.com/material-components/material-components-web/commit/b98d15d90b19e69066c0b417ee0d8b11ab733e20))
+* **tooltip:** Adjusting tooltip positioning logic so that the tooltip remains within the viewport even if the anchor element is partially off-screen. ([482ff90](https://github.com/material-components/material-components-web/commit/482ff909132b2e8f81791d7128cb0a3d2ff371a8))
+* **tooltip:** Reducing minimum threshold distance between tooltip and viewport from 32px to 8px. ([23491cf](https://github.com/material-components/material-components-web/commit/23491cf85b8831896f95879e8aea258d5ca7f653))
+
+
+### BREAKING CHANGES
+
+* **slider:** Adds slider adapter methods (get/setInputValue, get/setInputAttribute, removeInputAttribute). Slider DOM structure now contains a hidden input.
+
+PiperOrigin-RevId: 343157208
+
+
+
+
+
 # [8.0.0](https://github.com/material-components/material-components-web/compare/v7.0.0...v8.0.0) (2020-11-02)
 
 
