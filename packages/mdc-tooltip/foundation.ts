@@ -55,6 +55,8 @@ export class MDCTooltipFoundation extends MDCFoundation<MDCTooltipAdapter> {
       isRTL: () => false,
       registerDocumentEventHandler: () => undefined,
       deregisterDocumentEventHandler: () => undefined,
+      registerWindowEventHandler: () => undefined,
+      deregisterWindowEventHandler: () => undefined,
       notifyHidden: () => undefined,
     };
   }
@@ -69,11 +71,15 @@ export class MDCTooltipFoundation extends MDCFoundation<MDCTooltipAdapter> {
   private readonly hideDelayMs = numbers.HIDE_DELAY_MS;
   private readonly showDelayMs = numbers.SHOW_DELAY_MS;
 
+  private anchorRect: ClientRect|null = null;
+  private pollingAnchor = false;
   private frameId: number|null = null;
   private hideTimeout: number|null = null;
   private showTimeout: number|null = null;
   private readonly documentClickHandler: SpecificEventListener<'click'>;
   private readonly documentKeydownHandler: SpecificEventListener<'keydown'>;
+  private readonly windowScrollHandler: SpecificEventListener<'scroll'>;
+  private readonly windowResizeHandler: SpecificEventListener<'resize'>;
 
   constructor(adapter?: Partial<MDCTooltipAdapter>) {
     super({...MDCTooltipFoundation.defaultAdapter, ...adapter});
@@ -84,6 +90,14 @@ export class MDCTooltipFoundation extends MDCFoundation<MDCTooltipAdapter> {
 
     this.documentKeydownHandler = (evt) => {
       this.handleKeydown(evt);
+    };
+
+    this.windowScrollHandler = () => {
+      this.pollAnchorPosition();
+    };
+
+    this.windowResizeHandler = () => {
+      this.pollAnchorPosition();
     };
   }
 
@@ -135,6 +149,21 @@ export class MDCTooltipFoundation extends MDCFoundation<MDCTooltipAdapter> {
     }
   }
 
+  pollAnchorPosition() {
+    // Since scroll and resize events can fire at a high rate, we throttle
+    // the potential re-positioning of tooltip component using
+    // requestAnimationFrame.
+    if (this.pollingAnchor) {
+      return;
+    }
+
+    this.pollingAnchor = true;
+    requestAnimationFrame(() => {
+      this.repositionTooltipOnAnchorMove();
+      this.pollingAnchor = false;
+    });
+  }
+
   show() {
     this.clearHideTimeout();
     this.clearShowTimeout();
@@ -153,14 +182,18 @@ export class MDCTooltipFoundation extends MDCFoundation<MDCTooltipAdapter> {
     if (this.isTooltipMultiline()) {
       this.adapter.addClass(MULTILINE_TOOLTIP);
     }
-    const {top, left} = this.calculateTooltipDistance();
-    this.adapter.setStyleProperty('top', `${top}px`);
-    this.adapter.setStyleProperty('left', `${left}px`);
+
+    this.positionTooltip();
 
     this.adapter.registerDocumentEventHandler(
         'click', this.documentClickHandler);
     this.adapter.registerDocumentEventHandler(
         'keydown', this.documentKeydownHandler);
+
+    this.adapter.registerWindowEventHandler(
+        'scroll', this.windowScrollHandler);
+    this.adapter.registerWindowEventHandler(
+        'resize', this.windowResizeHandler);
 
     this.frameId = requestAnimationFrame(() => {
       this.clearAllAnimationClasses();
@@ -192,6 +225,10 @@ export class MDCTooltipFoundation extends MDCFoundation<MDCTooltipAdapter> {
         'click', this.documentClickHandler);
     this.adapter.deregisterDocumentEventHandler(
         'keydown', this.documentKeydownHandler);
+    this.adapter.deregisterWindowEventHandler(
+        'scroll', this.windowScrollHandler);
+    this.adapter.deregisterWindowEventHandler(
+        'resize', this.windowResizeHandler);
   }
 
   handleTransitionEnd() {
@@ -247,6 +284,13 @@ export class MDCTooltipFoundation extends MDCFoundation<MDCTooltipAdapter> {
         tooltipSize.width >= numbers.MAX_WIDTH;
   }
 
+  private positionTooltip() {
+    this.anchorRect = this.adapter.getAnchorBoundingRect();
+    const {top, left} = this.calculateTooltipDistance(this.anchorRect);
+    this.adapter.setStyleProperty('top', `${top}px`);
+    this.adapter.setStyleProperty('left', `${left}px`);
+  }
+
   /**
    * Calculates the position of the tooltip. A tooltip will be placed beneath
    * the anchor element and aligned either with the 'start'/'end' edge of the
@@ -261,8 +305,7 @@ export class MDCTooltipFoundation extends MDCFoundation<MDCTooltipAdapter> {
    * Users can specify an alignment, however, if this alignment results in the
    * tooltip colliding with the viewport, this specification is overwritten.
    */
-  private calculateTooltipDistance() {
-    const anchorRect = this.adapter.getAnchorBoundingRect();
+  private calculateTooltipDistance(anchorRect: ClientRect|null) {
     if (!anchorRect) {
       return {top: 0, left: 0};
     }
@@ -457,6 +500,20 @@ export class MDCTooltipFoundation extends MDCFoundation<MDCTooltipAdapter> {
     return yPos + tooltipHeight <= viewportHeight && yPos >= 0;
   }
 
+  private repositionTooltipOnAnchorMove() {
+    const newAnchorRect = this.adapter.getAnchorBoundingRect();
+    if (!newAnchorRect) {
+      return;
+    }
+
+    if (newAnchorRect.top !== this.anchorRect!.top ||
+        newAnchorRect.left !== this.anchorRect!.left ||
+        newAnchorRect.height !== this.anchorRect!.height ||
+        newAnchorRect.width !== this.anchorRect!.width) {
+      this.positionTooltip();
+    }
+  }
+
   private clearShowTimeout() {
     if (this.showTimeout) {
       clearTimeout(this.showTimeout);
@@ -490,6 +547,12 @@ export class MDCTooltipFoundation extends MDCFoundation<MDCTooltipAdapter> {
         'click', this.documentClickHandler);
     this.adapter.deregisterDocumentEventHandler(
         'keydown', this.documentKeydownHandler);
+
+    this.adapter.deregisterWindowEventHandler(
+        'scroll', this.windowScrollHandler);
+    this.adapter.deregisterWindowEventHandler(
+        'resize', this.windowResizeHandler);
+
   }
 }
 
